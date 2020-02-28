@@ -12,7 +12,7 @@ const query = {
 
 describe('First Web Tests', () => {
 
-  
+// CONSUMIR LA PAGINA  
   it('Consume GET Service', async () => {
     const response = await agent.get('http://localhost:3030/experience');
   
@@ -20,6 +20,7 @@ describe('First Web Tests', () => {
    
   });
   
+// CONSUMIR HEADERS
   it('Consume GET Service with headers parameters', async () => {
     const response = await agent.get('http://localhost:3030/experience');
     
@@ -33,6 +34,7 @@ describe('First Web Tests', () => {
 
   });
   
+// CONSUMIR BODY
   it('Consume GET Service with body parameters', async () => {
     const response = await agent.get('http://localhost:3030/experience');
     
