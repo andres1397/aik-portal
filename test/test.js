@@ -12,7 +12,7 @@ const query = {
 
 describe('First Web Tests', () => {
 
-// CONSUMIR LA PAGINA  
+// CONSUMIENDO EL PORTAL AIK  
   it('Consume GET Service', async () => {
     const response = await agent.get('http://localhost:3030/experience');
   
@@ -20,7 +20,7 @@ describe('First Web Tests', () => {
    
   });
   
-// CONSUMIR HEADERS
+// CONSUMIENDO LOS HEADERS DEL GET
   it('Consume GET Service with headers parameters', async () => {
     const response = await agent.get('http://localhost:3030/experience');
     
@@ -34,7 +34,7 @@ describe('First Web Tests', () => {
 
   });
   
-// CONSUMIR BODY
+// CONSUMIENDO EL BODY, EL OBJETIVO DE ESTA PRUEBA ES VER LA INTEGRIDAD DE LOS DATOS
   it('Consume GET Service with body parameters', async () => {
     const response = await agent.get('http://localhost:3030/experience');
     
