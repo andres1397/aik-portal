@@ -9,7 +9,7 @@ node {
 
     stage "Run test"
         sh "docker run -v \$(pwd)/aik-app-ui:/data --rm usemtech/nodejs-mocha npm install"
-        sh "docker run -v \$(pwd)/aik-app-ui:/data --rm usemtech/nodejs-mocha npm install chai chai-http && npm install --save-dev http-status-codes && npm install --save superagent superagent-promise"
+        sh "docker run -v \$(pwd)/aik-app-ui:/data --rm usemtech/nodejs-mocha npm install chai chai-http http-status-codes superagent superagent-promise"
         sh "docker run -v \$(pwd)/aik-app-ui:/data --rm usemtech/nodejs-mocha npm test"
     stage "Build RPM"
         sh "[ -d ./rpm] || mkdir ./rpm"
