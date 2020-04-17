@@ -13,14 +13,14 @@ const query = {
 describe('First Web Tests', () => {
 
   it('Consume GET Service', async () => {
-    const response = await agent.get('http://localhost:3030/experience');
+    const response = await agent.get('http://192.168.56.3:3030/experience');
   
     expect(response.status).to.equal(statusCode.OK);
    
   });
 
   it('Consume GET Service with headers parameters', async () => {
-    const response = await agent.get('http://localhost:3030/experience');
+    const response = await agent.get('http://192.168.56.3:3030/experience');
     
     expect(response.status).to.equal(statusCode.OK);
     expect(response.headers).to.have.property('x-powered-by');
@@ -33,7 +33,7 @@ describe('First Web Tests', () => {
   });
 
   it('Consume GET Service with body parameters', async () => {
-    const response = await agent.get('http://localhost:3030/experience');
+    const response = await agent.get('http://192.168.56.3:3030/experience');
     
     expect(response.status).to.equal(statusCode.OK);
     expect(response.text).to.have.contains('Doctor Strange');
