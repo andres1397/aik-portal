@@ -3,7 +3,9 @@
 // Declare our dependencies
 var express = require('express');
 var request = require('superagent');
-var localhost = process.env.BACK_HOST || '192.168.56.3';
+DIR_IP = "1.1.1.1";
+var ip = DIR_IP;
+var localhost = process.env.BACK_HOST || ip;
 // Create our express app
 var app = express();
 
