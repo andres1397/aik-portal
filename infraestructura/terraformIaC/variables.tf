@@ -6,15 +6,15 @@ variable "aik-ami-id" {
 }
 
 variable "vpc-name" {
-  default = "aik-vpc-AguirreCoralUrbano"
+  default = "aik-vpc-automatizacion-AguirreCoralUrbano"
 }
 
 variable "public-route-table-name" {
-  default = "public-routetable-AguirreCoralUrbano"
+  default = "public-routetable-automatizacion-AguirreCoralUrbano"
 }
 
 variable "public-subnet-name" {
-  default = "public-subnet1-AguirreCoralUrbano"
+  default = "public-subnet1-automatizacion-AguirreCoralUrbano"
 }
 
 variable "aik-instance-type" {
@@ -26,13 +26,23 @@ variable "aik-key-name" {
 }
 
 variable "aws-availability-zones" {
-  default = "us-east-1a,us-east-1b"
+  default = "us-west-2a"
 }
 
 variable "aik-instance-front-name" {
-  default = "Aik front - AguirreCoralUrbano"
+  default = "Aik front -automatizacion- AguirreCoralUrbano"
 }
 
 variable "aik-instance-back-name" {
-  default = "Aik back - AguirreCoralUrbano"
+  default = "Aik back -automatizacion- AguirreCoralUrbano"
+}
+
+variable "alb_name" { 
+  type = "string"
+  default = "lb-automatizacion-AguirreCoralUrbano"
+}
+
+variable "alb_security_group_name" {
+  type = "string"
+  default = "sg-alb-automatizacion-AguirreCoralUrbano"
 }

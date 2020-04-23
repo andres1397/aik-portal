@@ -7,4 +7,4 @@ install_npm_dependencies:
 
 run_aik_portal:
     cmd.run:
-      - name: "node /srv/aik-portal/aik-app-api/server.js" 
+      - name: "node /srv/aik-portal/aik-app-api/server.js"

@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "us-east-1"
+  region = "us-west-2"
 }
 
 resource "aws_vpc" "aik-vpc" {
@@ -55,7 +55,7 @@ resource "aws_route_table_association" "public" {
 # Creación del grupo de seguridad para el front
 resource "aws_security_group" "aik-sg-portal-front"{
 
-  name        = "portal-front"
+  name        = "portal-front-automatizacion-AguirreCoralUrbano"
   description = "Security group for allow traffic to Frontend"
   vpc_id      = "${aws_vpc.aik-vpc.id}"
 
@@ -94,7 +94,7 @@ resource "aws_security_group" "aik-sg-portal-front"{
 # Creación del grupo de seguridad para el back
 resource "aws_security_group" "aik-sg-portal-back" {
 
-  name        = "portal-back"
+  name        = "portal-back-automatizacion-AguirreCoralUrbano"
   description = "Security group for allow or deny traffic to Backend"
   vpc_id      = "${aws_vpc.aik-vpc.id}"
 
@@ -102,7 +102,7 @@ resource "aws_security_group" "aik-sg-portal-back" {
     from_port   = "3000"
     to_port     = "3000"
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    source_security_group_id = "${aws_security_group.aik-sg-portal-front.id}"
   }
 
   ingress {
@@ -123,11 +123,12 @@ resource "aws_security_group" "aik-sg-portal-back" {
 /*
 resource "aws_autoscaling_group" "autoscaling-front"{
 
-    launch_configuration = "${aws_launch_configuration.example_launch.name}"
+    launch_configuration = "${aws_launch_configuration.launch-front.name}"
     min_size = 1
     max_size = 2
     desired_capacity = 1
-    vpc_zone_identifier = ["${data.aws_subnet_ids.default_subnet.ids}"]
+    vpc_zone_identifier = ["${aws_subnet.aik-subnet-public.id}"]
+    target_group_arns = ["${aws_lb_target_group.lb-target-front.arn}"]
 
     tag = {
         key = "Name"
@@ -141,7 +142,7 @@ resource "aws_autoscaling_group" "autoscaling-front"{
 resource "aws_launch_configuration" "launch-front" {
   image_id = "${var.aik-ami-id}"
   instance_type = "${var.aik-instance-type}"
-  security_groups = ["${aws_security_group.aik-sg-portal-front}"]
+  security_groups = ["${aws_security_group.aik-sg-portal-front.id}"]
   
   
   user_data = <<-EOF
@@ -166,6 +167,115 @@ resource "aws_launch_configuration" "launch-front" {
       create_before_destroy = true
   }
 }
+
+resource "aws_autoscaling_group" "autoscaling-back"{
+
+    launch_configuration = "${aws_launch_configuration.launch-back.name}"
+    min_size = 1
+    max_size = 2
+    desired_capacity = 1
+    vpc_zone_identifier = ["${aws_subnet.aik-subnet-public.id}"]
+    target_group_arns = ["${aws_lb_target_group.lb-target-back.arn}"]
+
+    tag = {
+        key = "Name"
+        value = "example-ags"
+        propagate_at_launch = true
+    }
+
+}
+
+resource "aws_launch_configuration" "launch-back" {
+  image_id = "${var.aik-ami-id}"
+  instance_type = "${var.aik-instance-type}"
+  security_groups = ["${aws_security_group.aik-sg-portal-back.id}"]
+  
+  
+    user_data = <<-EOF
+        #!/bin/bash
+        sudo yum update -y
+        sudo yum install -y git 
+        # Clonar nuestro repositorio 
+        git clone https://github.com/andres1397/aik-portal /srv/aik-portal
+        
+        # Instalar SaltStack
+        sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
+        sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
+        
+        #Put custom minion config in place (for enabling masterless mode)
+        sudo cp -r /srv/aik-portal/Configuration_management/minion.d /etc/salt/
+        echo -e 'grains:\n roles:\n  - backend' > /etc/salt/minion.d/grains.conf
+        
+        # Realizar un saltstack completo
+        sudo salt-call state.apply
+        EOF
+   lifecycle = {
+      create_before_destroy = true
+  }
+}
+
+resource "aws_lb" "load-balancer" {
+    name = "${var.alb_name}"
+    load_balancer_type = "application"
+    subnets = ["${data.aws_subnet_ids.default_subnet.ids}"]
+    security_groups = ["${aws_security_group.sg_lb.id}"]
+}
+
+resource "aws_lb_target_group" "lb-target-back" {
+  
+  name = "${var.alb_name}"
+  port = "${var.server_port}"
+  protocol = "HTTP"
+  vpc_id = "${aws_vpc.aik-vpc.id}"
+
+  health_check = {
+      path = "/"
+      protocol = "HTTP"
+      mather = "200"
+      interval = 15
+      timeout = 3
+      health_threshould = 2
+      unhealthy_threshold = 2
+  }
+}
+
+resource "aws_lb_target_group" "lb-target-front" {
+  
+  name = "${var.alb_name}"
+  port = "${var.server_port}"
+  protocol = "HTTP"
+  vpc_id = "${aws_vpc.aik-vpc.id}"
+
+  health_check = {
+      path = "/"
+      protocol = "HTTP"
+      mather = "200"
+      interval = 15
+      timeout = 3
+      health_threshould = 2
+      unhealthy_threshold = 2
+  }
+}
+
+resource "aws_security_group" "sg_lb" {
+    name = "${var.alb_security_group_name}"
+
+    ingress{
+        from_port = 80
+        to_port = 80
+        protocol = "HTTP"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+    egress {
+        from_port = 0
+        to_port = 0
+        protocol = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+}
+
+
+
 */
 
 resource "aws_instance" "aik-portal-front" {
