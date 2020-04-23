@@ -1,3 +1,6 @@
+variable "vpc-cidr" {
+  default = "10.0.0.0/16"
+}
 variable "aik-ami-id" {
   default = "ami-0fc61db8544a617ed"
 }

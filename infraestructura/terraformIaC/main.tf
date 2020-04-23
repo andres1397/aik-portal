@@ -53,7 +53,7 @@ resource "aws_route_table_association" "public" {
 }
 
 # Creación del grupo de seguridad para el front
-resource "aws_security_group" "aik-sg-portal-front" {
+resource "aws_security_group" "aik-sg-portal-front"{
 
   name        = "portal-front"
   description = "Security group for allow traffic to Frontend"
@@ -71,7 +71,7 @@ resource "aws_security_group" "aik-sg-portal-front" {
     from_port   = "3000"
     to_port     = "3000"
     protocol    = "tcp"
-    cidr_blocks = [""] # Dirección de la instancia del backend o dirección de red que vamos a usar
+    cidr_blocks = ["0.0.0.0/0"]
     description = "Allow traffic trough port 3000 from backend"
   }
 
@@ -119,6 +119,54 @@ resource "aws_security_group" "aik-sg-portal-back" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+/*
+resource "aws_autoscaling_group" "autoscaling-front"{
+
+    launch_configuration = "${aws_launch_configuration.example_launch.name}"
+    min_size = 1
+    max_size = 2
+    desired_capacity = 1
+    vpc_zone_identifier = ["${data.aws_subnet_ids.default_subnet.ids}"]
+
+    tag = {
+        key = "Name"
+        value = "example-ags"
+        propagate_at_launch = true
+
+    }
+
+}
+
+resource "aws_launch_configuration" "launch-front" {
+  image_id = "${var.aik-ami-id}"
+  instance_type = "${var.aik-instance-type}"
+  security_groups = ["${aws_security_group.aik-sg-portal-front}"]
+  
+  
+  user_data = <<-EOF
+        #!/bin/bash
+        sudo yum update -y
+        sudo yum install -y git 
+        # Clonar nuestro repositorio 
+        git clone https://github.com/andres1397/aik-portal /srv/aik-portal
+
+        # Instalar SaltStack
+        sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
+        sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
+        
+        #Put custom minion config in place (for enabling masterless mode)
+        sudo cp -r /srv/aik-portal/Configuration_management/minion.d /etc/salt/
+        echo -e 'grains:\n roles:\n  - frontend' > /etc/salt/minion.d/grains.conf
+        
+        # Realizar un saltstack completo
+        sudo salt-call state.apply
+        EOF
+   lifecycle = {
+      create_before_destroy = true
+  }
+}
+*/
 
 resource "aws_instance" "aik-portal-front" {
 
