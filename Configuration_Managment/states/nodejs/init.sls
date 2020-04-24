@@ -6,6 +6,6 @@
   cmd.run:
     - name: "curl -sL https://rpm.nodesource.com/setup_11.x | sudo -E bash -"
 
-nodejs:
+ nodejs:
   pkg.installed:
    - name: nodejs
