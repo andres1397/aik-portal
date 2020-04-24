@@ -2,7 +2,7 @@ variable "vpc-cidr" {
   default = "10.0.0.0/16"
 }
 variable "aik-ami-id" {
-  default = "ami-0fc61db8544a617ed"
+  default = "ami-a0cfeed8"
 }
 
 variable "vpc-name" {
@@ -22,7 +22,7 @@ variable "aik-instance-type" {
 }
 
 variable "aik-key-name" {
-  default = "devops"
+  default = "devops-automatizacion-AguirreCoralUrbano"
 }
 
 variable "aws-availability-zones" {
