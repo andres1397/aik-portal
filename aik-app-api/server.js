@@ -81,10 +81,7 @@ app.get('/support', function(req, res){
 // Implement content
 app.get('/experience', function(req, res){
   var pending = [
-    {title : 'Superman: Homecoming', release: '2017', score: 10, reviewer: 'Chris Harris', publication: 'International Movie Critic'},
-    {title : 'Wonder Woman', release: '2017', score: 8, reviewer: 'Martin Thomas', publication : 'TheOne'},
-    {title : 'Doctor Strange', release : '2016', score: 7, reviewer: 'Anthony Miller', publication : 'ComicBookHero.com'}
-  ];
+    ];
 
   res.json(pending);
 });
