@@ -5,6 +5,7 @@ provider "aws" {
 resource "aws_vpc" "aik-vpc" {
 
   cidr_block = "${var.vpc-cidr}"
+  enable_dns_hostnames = true
 
   tags {
     Name = "${var.vpc-name}"
@@ -55,7 +56,7 @@ resource "aws_route_table_association" "public" {
 # Creación del grupo de seguridad para el front
 resource "aws_security_group" "aik-sg-portal-front"{
 
-  name        = "portal-front-automatizacion-AguirreCoralUrbano"
+  name        = "portal-front-automatizacion"
   description = "Security group for allow traffic to Frontend"
   vpc_id      = "${aws_vpc.aik-vpc.id}"
 
@@ -86,7 +87,7 @@ resource "aws_security_group" "aik-sg-portal-front"{
 # Creación del grupo de seguridad para el back
 resource "aws_security_group" "aik-sg-portal-back" {
 
-  name        = "portal-back-automatizacion-AguirreCoralUrbano"
+  name        = "portal-back-automatizacion"
   description = "Security group for allow or deny traffic to Backend"
   vpc_id      = "${aws_vpc.aik-vpc.id}"
 
@@ -95,6 +96,13 @@ resource "aws_security_group" "aik-sg-portal-back" {
     to_port     = "3000"
     protocol    = "tcp"
     security_groups = ["${aws_security_group.aik-sg-portal-front.id}"]
+  }
+
+    ingress {
+    from_port = "8"
+    to_port = "0"
+    protocol = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
@@ -251,7 +259,8 @@ resource "aws_lb_target_group" "lb-target-front" {
 
 resource "aws_security_group" "sg_lb" {
     name = "${var.alb_security_group_name}"
-
+    vpc_id = "${aws_vpc.aik-vpc.id}"
+    
     ingress{
         from_port = 80
         to_port = 80
@@ -266,41 +275,31 @@ resource "aws_security_group" "sg_lb" {
     }
 }
 
+resource "aws_lb_listener" "http" {
 
+  load_balancer_arn = "${aws_lb.aik_lb.arn}"
 
-*/
-
-resource "aws_instance" "aik-portal-front" {
-
-  ami                    = "${var.aik-ami-id}"
-  instance_type          = "${var.aik-instance-type}"
-  key_name               = "${var.aik-key-name}"
-  vpc_security_group_ids = ["${aws_security_group.aik-sg-portal-front.id}"]
-  subnet_id              = "${aws_subnet.aik-subnet-public.id}"
-  tags { Name = "${var.aik-instance-front-name}" }
-
-  user_data = <<-EOF
-        #!/bin/bash
-        sudo yum update -y
-        sudo yum install -y git 
-        # Clonar nuestro repositorio 
-        sudo git clone -b Feature-FrontBackInfra-ImplementacionDiseñoAWS https://github.com/andres1397/aik-portal /srv/aik-portal
-
-        # Instalar SaltStack
-        #sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
-        sudo curl -L https://bootstrap.saltstack.com -o bootstrap_salt.sh
-        sudo sh bootstrap_salt.sh
-        #sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
-        
-        #Put custom minion config in place (for enabling masterless mode)
-        sudo cp -r /srv/aik-portal/Configuration_Managment/minion.d /etc/salt/
-        echo -e 'grains:\n roles:\n  - frontend' | sudo tee /etc/salt/minion.d/grains.conf
-        
-        # Realizar un saltstack completo
-        sudo salt-call state.apply
-        EOF
 
 }
+
+resource "aws_lb_listener_rule" "asg" {
+  listener_arn = "${aws_lb_listener.http.arn}"
+  priority = 100
+
+  condition {
+    path_pattern{
+      values = ["*"]
+    }
+  }
+
+  action {
+    type = "forward"
+    target_group_arn = "${aws_lb_target_group.lb-target-front.arn}"
+  }
+
+}
+
+*/
 
 resource "aws_instance" "aik-portal-back" {
 
@@ -311,25 +310,22 @@ resource "aws_instance" "aik-portal-back" {
   subnet_id              = "${aws_subnet.aik-subnet-public.id}"
   tags { Name = "${var.aik-instance-back-name}" }
 
-  user_data = <<-EOF
-        #!/bin/bash
-        sudo yum update -y
-        sudo yum install -y git 
-        # Clonar nuestro repositorio 
-        sudo git clone -b Feature-FrontBackInfra-ImplementacionDiseñoAWS https://github.com/andres1397/aik-portal /srv/aik-portal
-        
-        # Instalar SaltStack
-        sudo curl -L https://bootstrap.saltstack.com -o bootstrap_salt.sh
-        sudo sh bootstrap_salt.sh
-        #sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
-        #sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
-
-        #Put custom minion config in place (for enabling masterless mode)
-        sudo cp -r /srv/aik-portal/Configuration_management/minion.d /etc/salt/
-        echo -e 'grains:\n roles:\n  - backend' | sudo tee /etc/salt/minion.d/grains.conf
-        
-        # Realizar un saltstack completo
-        sudo salt-call state.apply
-        EOF
+  user_data = "${file("./scripts/back.sh")}"
 
 }
+
+resource "aws_instance" "aik-portal-front" {
+
+  ami                    = "${var.aik-ami-id}"
+  instance_type          = "${var.aik-instance-type}"
+  key_name               = "${var.aik-key-name}"
+  vpc_security_group_ids = ["${aws_security_group.aik-sg-portal-front.id}"]
+  subnet_id              = "${aws_subnet.aik-subnet-public.id}"
+  tags { Name = "${var.aik-instance-front-name}" }
+
+  depends_on = ["aws_instance.aik-portal-back"]
+
+  user_data = "${file("./scripts/front.sh")}"
+
+}
+
