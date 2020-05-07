@@ -1,28 +1,43 @@
-process.env.NODE_ENV = 'test';
+const agent = require('superagent');
+const statusCode = require('http-status-codes');
+const chai = require('chai');
+var expect = require('chai').expect;
 
-//Require the dev-dependencies
-let chai = require('chai');
-let chaiHttp = require('chai-http');
-let server = require('../server');
-let should = chai.should();
+const query = {
+  name: 'John',
+  age: '31',
+  city: 'New York'
+};
 
-chai.use(chaiHttp);
-//Our parent block
-describe('API', () => {
 
-/*
-  * Test the /GET route
-  */
-  describe('/GET home', () => {
-      it('it should GET any reply', (done) => {
-        chai.request(server)
-            .get('/')
-            .end((err, res) => {
-                res.should.have.status(200);
-              done();
-            });
-      });
+describe('First Web Tests', () => {
+
+  it('Consume GET Service', async () => {
+    const response = await agent.get('http://192.168.56.3:3030/experience');
+  
+    expect(response.status).to.equal(statusCode.OK);
+   
   });
 
+  it('Consume GET Service with headers parameters', async () => {
+    const response = await agent.get('http://192.168.56.3:3030/experience');
+    
+    expect(response.status).to.equal(statusCode.OK);
+    expect(response.headers).to.have.property('x-powered-by');
+    expect(response.headers).to.have.property('content-type');
+    expect(response.headers).to.have.property('content-length');
+    expect(response.headers).to.have.property('etag');
+    expect(response.headers).to.have.property('date');
+    expect(response.headers).to.have.property('connection');
 
   });
+
+  it('Consume GET Service with body parameters', async () => {
+    const response = await agent.get('http://192.168.56.3:3030/experience');
+    
+    expect(response.status).to.equal(statusCode.OK);
+    expect(response.text).to.have.contains('Doctor Strange');
+
+
+  });
+});
