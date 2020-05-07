@@ -1,6 +1,8 @@
+
 variable "vpc-cidr" {
   default = "10.0.0.0/16"
 }
+
 variable "aik-ami-id" {
   default = "ami-0d6621c01e8c2de2c"
 }
@@ -26,7 +28,7 @@ variable "aik-key-name" {
 }
 
 variable "aws-availability-zones" {
-  default = "us-west-2a"
+  default = "us-west-2a,us-west-2b"
 }
 
 variable "aik-instance-front-name" {
@@ -37,12 +39,17 @@ variable "aik-instance-back-name" {
   default = "Aik back -automatizacion- AguirreCoralUrbano"
 }
 
-variable "alb_name" { 
-  type = "string"
+variable "alb_name" {
+  type = string
   default = "lb-automatizacion-AguirreCoralUrbano"
 }
 
 variable "alb_security_group_name" {
-  type = "string"
+  type = string
   default = "sg-alb-automatizacion-AguirreCoralUrbano"
+}
+
+variable "public_subnet_cidr_blocks" {
+  default     = ["10.0.0.0/16"]
+  type        = list(string)
 }
