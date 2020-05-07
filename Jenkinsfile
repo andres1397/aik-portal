@@ -10,7 +10,6 @@ node {
     stage "Run test"
         sh "docker run -v \$(pwd)/aik-app-ui:/data --rm usemtech/nodejs-mocha npm install"
         sh "docker run -v \$(pwd)/aik-app-ui:/data --rm usemtech/nodejs-mocha npm install chai chai-http http-status-codes superagent superagent-promise"
-        sh "docker run -v \$(pwd)/aik-app-ui:/data --rm usemtech/nodejs-mocha npm test"
     stage "Build RPM"
         sh "[ -d ./rpm] || mkdir ./rpm"
         sh "docker run -v \$(pwd)/aik-app-ui:/data/aik-app -v \$(pwd)/aik-app-ui/rpm:/data/rpm --rm tenzer/fpm -s dir -t rpm -n aik-app -v \$(git rev-parse --short HEAD) --description \"Aik app\" --directories /var/www/aik-app --package /data/rpm/aik-app-\$(git rev-parse --short HEAD).rpm /data/aik-app=/var/www/"
