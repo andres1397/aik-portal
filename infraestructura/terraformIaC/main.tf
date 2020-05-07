@@ -4,54 +4,79 @@ provider "aws" {
 
 resource "aws_vpc" "aik-vpc" {
 
-  cidr_block = "${var.vpc-cidr}"
+  cidr_block = var.vpc-cidr
   enable_dns_hostnames = true
   enable_dns_support = true
 
-  tags {
-    Name = "${var.vpc-name}"
+  tags = {
+    Name = var.vpc-name
   }
 }
 
 # Creación del Internet Gateway
 resource "aws_internet_gateway" "aik-igw" {
-  vpc_id = "${aws_vpc.aik-vpc.id}"
+  vpc_id = aws_vpc.aik-vpc.id
 }
 
 # Creación de una tabla de ruteo pública
 resource "aws_route_table" "rtb-public" {
-  vpc_id = "${aws_vpc.aik-vpc.id}"
+  vpc_id = aws_vpc.aik-vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.aik-igw.id}"
+    gateway_id = aws_internet_gateway.aik-igw.id
   }
 
-  tags {
-    Name = "${var.public-route-table-name}"
+  tags = {
+    Name = var.public-route-table-name
   }
 
 }
 
+resource "aws_subnet" "another-subnet-public" {
+  count = length(var.public_subnet_cidr_blocks)
+  vpc_id = aws_vpc.aik-vpc.id
+  cidr_block = cidrsubnet(var.public_subnet_cidr_blocks[count.index], 8, 3)
+  availability_zone = element(split(",", var.aws-availability-zones), count.index+1)
+  map_public_ip_on_launch = true
+  tags = {
+    Name = "Public2-another-subnet-AguirreCoralUrbano"
+  }
+}
+
 # Creación y asociación de la subred publica con la tabla de ruteo
 resource "aws_subnet" "aik-subnet-public" {
-
-  vpc_id                  = "${aws_vpc.aik-vpc.id}"
-  cidr_block              = "${cidrsubnet(var.vpc-cidr, 8, 1)}"
-  availability_zone       = "${element(split(",", var.aws-availability-zones), count.index)}"
+/*
+  vpc_id                  = aws_vpc.aik-vpc.id
+  cidr_block              = cidrsubnet(var.vpc-cidr, 8, 1)
+  availability_zone       = element(split(",", var.aws-availability-zones), count.index)
   map_public_ip_on_launch = true
+  */
 
-  tags {
-    Name = "${var.public-subnet-name}"
+  count = length(var.public_subnet_cidr_blocks)
+  vpc_id = aws_vpc.aik-vpc.id
+  cidr_block = cidrsubnet(var.public_subnet_cidr_blocks[count.index], 8, 1)
+  availability_zone = element(split(",", var.aws-availability-zones), count.index)
+  map_public_ip_on_launch = true
+  tags = {
+    Name = var.public-subnet-name
   }
 }
 
 # Asociación entre la tabla de ruteo y la subred publica
 resource "aws_route_table_association" "public" {
+  count = length(var.public_subnet_cidr_blocks)
 
-  subnet_id      = "${aws_subnet.aik-subnet-public.id}"
-  route_table_id = "${aws_route_table.rtb-public.id}"
+  subnet_id      = aws_subnet.aik-subnet-public[count.index].id
+  route_table_id = aws_route_table.rtb-public.id
 
+}
+
+resource "aws_route_table_association" "public2" {
+  count = length(var.public_subnet_cidr_blocks)
+
+  subnet_id      = aws_subnet.aik-subnet-public[count.index].id
+  route_table_id = aws_route_table.rtb-public.id
 }
 
 # Creación del grupo de seguridad para el front
@@ -59,7 +84,7 @@ resource "aws_security_group" "aik-sg-portal-front"{
 
   name        = "portal-front-automatizacion"
   description = "Security group for allow traffic to Frontend"
-  vpc_id      = "${aws_vpc.aik-vpc.id}"
+  vpc_id      = aws_vpc.aik-vpc.id
 
   ingress {
     from_port   = "3030"
@@ -90,13 +115,13 @@ resource "aws_security_group" "aik-sg-portal-back" {
 
   name        = "portal-back-automatizacion"
   description = "Security group for allow or deny traffic to Backend"
-  vpc_id      = "${aws_vpc.aik-vpc.id}"
+  vpc_id      = aws_vpc.aik-vpc.id
 
   ingress {
     from_port   = "3000"
     to_port     = "3000"
     protocol    = "tcp"
-    security_groups = ["${aws_security_group.aik-sg-portal-front.id}"]
+    security_groups = [aws_security_group.aik-sg-portal-front.id]
   }
 
     ingress {
@@ -121,6 +146,25 @@ resource "aws_security_group" "aik-sg-portal-back" {
   }
 }
 
+resource "aws_security_group" "db-sg" {
+  name = "db-sg"
+  vpc_id = aws_vpc.aik-vpc.id
+
+  ingress {
+    from_port = "3306"
+    protocol = "tcp"
+    to_port = "3306"
+    security_groups = [aws_security_group.aik-sg-portal-back.id]
+  }
+
+  egress {
+    from_port = 0
+    protocol = "-1"
+    to_port = 0
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+}
 /*
 resource "aws_autoscaling_group" "autoscaling-front"{
 
@@ -144,23 +188,23 @@ resource "aws_launch_configuration" "launch-front" {
   image_id = "${var.aik-ami-id}"
   instance_type = "${var.aik-instance-type}"
   security_groups = ["${aws_security_group.aik-sg-portal-front.id}"]
-  
-  
+
+
   user_data = <<-EOF
         #!/bin/bash
         sudo yum update -y
-        sudo yum install -y git 
-        # Clonar nuestro repositorio 
+        sudo yum install -y git
+        # Clonar nuestro repositorio
         git clone https://github.com/andres1397/aik-portal /srv/aik-portal
 
         # Instalar SaltStack
         sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
         sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
-        
+
         #Put custom minion config in place (for enabling masterless mode)
         sudo cp -r /srv/aik-portal/Configuration_management/minion.d /etc/salt/
         echo -e 'grains:\n roles:\n  - frontend' > /etc/salt/minion.d/grains.conf
-        
+
         # Realizar un saltstack completo
         sudo salt-call state.apply
         EOF
@@ -190,23 +234,23 @@ resource "aws_launch_configuration" "launch-back" {
   image_id = "${var.aik-ami-id}"
   instance_type = "${var.aik-instance-type}"
   security_groups = ["${aws_security_group.aik-sg-portal-back.id}"]
-  
-  
+
+
     user_data = <<-EOF
         #!/bin/bash
         sudo yum update -y
-        sudo yum install -y git 
-        # Clonar nuestro repositorio 
+        sudo yum install -y git
+        # Clonar nuestro repositorio
         git clone https://github.com/andres1397/aik-portal /srv/aik-portal
-        
+
         # Instalar SaltStack
         sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
         sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
-        
+
         #Put custom minion config in place (for enabling masterless mode)
         sudo cp -r /srv/aik-portal/Configuration_management/minion.d /etc/salt/
         echo -e 'grains:\n roles:\n  - backend' > /etc/salt/minion.d/grains.conf
-        
+
         # Realizar un saltstack completo
         sudo salt-call state.apply
         EOF
@@ -223,7 +267,7 @@ resource "aws_lb" "load-balancer" {
 }
 
 resource "aws_lb_target_group" "lb-target-back" {
-  
+
   name = "${var.alb_name}"
   port = "${var.server_port}"
   protocol = "HTTP"
@@ -241,7 +285,7 @@ resource "aws_lb_target_group" "lb-target-back" {
 }
 
 resource "aws_lb_target_group" "lb-target-front" {
-  
+
   name = "${var.alb_name}"
   port = "${var.server_port}"
   protocol = "HTTP"
@@ -261,7 +305,7 @@ resource "aws_lb_target_group" "lb-target-front" {
 resource "aws_security_group" "sg_lb" {
     name = "${var.alb_security_group_name}"
     vpc_id = "${aws_vpc.aik-vpc.id}"
-    
+
     ingress{
         from_port = 80
         to_port = 80
@@ -303,30 +347,53 @@ resource "aws_lb_listener_rule" "asg" {
 */
 
 resource "aws_instance" "aik-portal-back" {
+  count = length(var.public_subnet_cidr_blocks)
 
-  ami                    = "${var.aik-ami-id}"
-  instance_type          = "${var.aik-instance-type}"
-  key_name               = "${var.aik-key-name}"
-  vpc_security_group_ids = ["${aws_security_group.aik-sg-portal-back.id}"]
-  subnet_id              = "${aws_subnet.aik-subnet-public.id}"
-  tags { Name = "${var.aik-instance-back-name}" }
+  ami                    = var.aik-ami-id
+  instance_type          = var.aik-instance-type
+  key_name               = var.aik-key-name
+  vpc_security_group_ids = [aws_security_group.aik-sg-portal-back.id]
+  subnet_id              = aws_subnet.aik-subnet-public[count.index].id
+  tags = { Name = var.aik-instance-back-name }
 
-  user_data = "${file("./scripts/back.sh")}"
+  user_data = file("./scripts/back.sh")
 
 }
 
 resource "aws_instance" "aik-portal-front" {
+  count = length(var.public_subnet_cidr_blocks)
 
-  ami                    = "${var.aik-ami-id}"
-  instance_type          = "${var.aik-instance-type}"
-  key_name               = "${var.aik-key-name}"
-  vpc_security_group_ids = ["${aws_security_group.aik-sg-portal-front.id}"]
-  subnet_id              = "${aws_subnet.aik-subnet-public.id}"
-  tags { Name = "${var.aik-instance-front-name}" }
+  ami                    = var.aik-ami-id
+  instance_type          = var.aik-instance-type
+  key_name               = var.aik-key-name
+  vpc_security_group_ids = [aws_security_group.aik-sg-portal-front.id]
+  subnet_id              = aws_subnet.aik-subnet-public[count.index].id
+  tags = { Name = var.aik-instance-front-name }
 
-  depends_on = ["aws_instance.aik-portal-back"]
+  depends_on = [aws_instance.aik-portal-back]
 
-  user_data = "${file("./scripts/front.sh")}"
+  user_data = file("./scripts/front.sh")
 
 }
 
+resource "aws_db_subnet_group" "subnet-db-group" {
+  count = length(var.public_subnet_cidr_blocks)
+  name = "subnet-db-aguirre-coral-urbano"
+  subnet_ids = [aws_subnet.aik-subnet-public[count.index].id, aws_subnet.another-subnet-public[count.index].id]
+}
+
+resource "aws_db_instance" "My-SQL-Database" {
+  count = length(var.public_subnet_cidr_blocks)
+
+  identifier = "db-rds-AguirreCoralUrbano"
+  allocated_storage = 20
+  storage_type = "gp2"
+  engine = "mysql"
+  instance_class = "db.t2.micro"
+  engine_version = "5.7"
+  name = "dbRDSAguirreCoralUrbano"
+  username = "myrds"
+  password = "mysqlrds"
+  skip_final_snapshot = true
+  db_subnet_group_name = aws_db_subnet_group.subnet-db-group[count.index].id
+}
