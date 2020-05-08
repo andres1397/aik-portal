@@ -165,151 +165,101 @@ resource "aws_security_group" "db-sg" {
   }
 
 }
-/*
-resource "aws_autoscaling_group" "autoscaling-front"{
 
-    launch_configuration = "${aws_launch_configuration.launch-front.name}"
+resource "aws_autoscaling_group" "autoscaling-front"{
+    count = length(var.public_subnet_cidr_blocks)
+
+    launch_configuration = aws_launch_configuration.launch-front[count.index].name
     min_size = 1
     max_size = 2
     desired_capacity = 1
-    vpc_zone_identifier = ["${aws_subnet.aik-subnet-public.id}"]
-    target_group_arns = ["${aws_lb_target_group.lb-target-front.arn}"]
+    vpc_zone_identifier = [aws_subnet.aik-subnet-public[count.index].id]
+    target_group_arns = [aws_lb_target_group.lb-target-front.arn]
 
-    tag = {
+    tag {
         key = "Name"
-        value = "example-ags"
+        value = var.aik-instance-front-name
         propagate_at_launch = true
-
     }
 
 }
 
 resource "aws_launch_configuration" "launch-front" {
-  image_id = "${var.aik-ami-id}"
-  instance_type = "${var.aik-instance-type}"
-  security_groups = ["${aws_security_group.aik-sg-portal-front.id}"]
+  count = length(var.public_subnet_cidr_blocks)
+  image_id = var.aik-ami-id
+  instance_type = var.aik-instance-type
+  security_groups = [aws_security_group.aik-sg-portal-front.id]
+  key_name = var.aik-key-name
 
+  depends_on = [aws_instance.aik-portal-back]
 
   user_data = <<-EOF
-        #!/bin/bash
-        sudo yum update -y
-        sudo yum install -y git
-        # Clonar nuestro repositorio
-        git clone https://github.com/andres1397/aik-portal /srv/aik-portal
+      #!/bin/bash
+      sudo yum update -y
+      sudo yum install -y git
+      # Clonar nuestro repositorio
+      sudo git clone -b Feature-FrontBackInfra-ImplementacionDiseñoAWS https://github.com/andres1397/aik-portal /srv/aik-portal
 
-        # Instalar SaltStack
-        sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
-        sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
+      # Crear variable de entorno
 
-        #Put custom minion config in place (for enabling masterless mode)
-        sudo cp -r /srv/aik-portal/Configuration_management/minion.d /etc/salt/
-        echo -e 'grains:\n roles:\n  - frontend' > /etc/salt/minion.d/grains.conf
+      echo "BACKIP="${aws_instance.aik-portal-back[count.index].private_ip}"" >> /etc/environment
 
-        # Realizar un saltstack completo
-        sudo salt-call state.apply
-        EOF
-   lifecycle = {
-      create_before_destroy = true
-  }
-}
+      # Instalar SaltStack
+      #sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
+      sudo curl -L https://bootstrap.saltstack.com -o bootstrap_salt.sh
+      sudo sh bootstrap_salt.sh
+      #sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
 
-resource "aws_autoscaling_group" "autoscaling-back"{
+      #Put custom minion config in place (for enabling masterless mode)
+      sudo cp -r /srv/aik-portal/Configuration_Managment/minion.d /etc/salt/
+      echo -e 'grains:\n roles:\n  - frontend' | sudo tee /etc/salt/minion.d/grains.conf
 
-    launch_configuration = "${aws_launch_configuration.launch-back.name}"
-    min_size = 1
-    max_size = 2
-    desired_capacity = 1
-    vpc_zone_identifier = ["${aws_subnet.aik-subnet-public.id}"]
-    target_group_arns = ["${aws_lb_target_group.lb-target-back.arn}"]
+      # Realizar un saltstack completo
+      sudo salt-call state.apply
 
-    tag = {
-        key = "Name"
-        value = "example-ags"
-        propagate_at_launch = true
-    }
+      EOF
 
-}
-
-resource "aws_launch_configuration" "launch-back" {
-  image_id = "${var.aik-ami-id}"
-  instance_type = "${var.aik-instance-type}"
-  security_groups = ["${aws_security_group.aik-sg-portal-back.id}"]
-
-
-    user_data = <<-EOF
-        #!/bin/bash
-        sudo yum update -y
-        sudo yum install -y git
-        # Clonar nuestro repositorio
-        git clone https://github.com/andres1397/aik-portal /srv/aik-portal
-
-        # Instalar SaltStack
-        sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
-        sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
-
-        #Put custom minion config in place (for enabling masterless mode)
-        sudo cp -r /srv/aik-portal/Configuration_management/minion.d /etc/salt/
-        echo -e 'grains:\n roles:\n  - backend' > /etc/salt/minion.d/grains.conf
-
-        # Realizar un saltstack completo
-        sudo salt-call state.apply
-        EOF
-   lifecycle = {
+  lifecycle {
       create_before_destroy = true
   }
 }
 
 resource "aws_lb" "load-balancer" {
-    name = "${var.alb_name}"
+    count = length(var.public_subnet_cidr_blocks)
+
+    name = var.alb_name
     load_balancer_type = "application"
-    subnets = ["${data.aws_subnet_ids.default_subnet.ids}"]
-    security_groups = ["${aws_security_group.sg_lb.id}"]
-}
-
-resource "aws_lb_target_group" "lb-target-back" {
-
-  name = "${var.alb_name}"
-  port = "${var.server_port}"
-  protocol = "HTTP"
-  vpc_id = "${aws_vpc.aik-vpc.id}"
-
-  health_check = {
-      path = "/"
-      protocol = "HTTP"
-      mather = "200"
-      interval = 15
-      timeout = 3
-      health_threshould = 2
-      unhealthy_threshold = 2
-  }
+    subnets = [aws_subnet.aik-subnet-public[count.index].id, aws_subnet.another-subnet-public[count.index].id]
+    security_groups = [
+      aws_security_group.sg_lb.id]
 }
 
 resource "aws_lb_target_group" "lb-target-front" {
 
-  name = "${var.alb_name}"
-  port = "${var.server_port}"
+  name = var.alb_name
+  port = var.server_port
   protocol = "HTTP"
-  vpc_id = "${aws_vpc.aik-vpc.id}"
+  vpc_id = aws_vpc.aik-vpc.id
 
-  health_check = {
+  health_check {
       path = "/"
       protocol = "HTTP"
-      mather = "200"
+      matcher = "200"
       interval = 15
       timeout = 3
-      health_threshould = 2
+      healthy_threshold = 2
       unhealthy_threshold = 2
   }
 }
 
 resource "aws_security_group" "sg_lb" {
-    name = "${var.alb_security_group_name}"
-    vpc_id = "${aws_vpc.aik-vpc.id}"
+    name = var.alb_security_group_name
+    vpc_id = aws_vpc.aik-vpc.id
 
     ingress{
         from_port = 80
         to_port = 80
-        protocol = "HTTP"
+        protocol = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
     egress {
@@ -321,14 +271,25 @@ resource "aws_security_group" "sg_lb" {
 }
 
 resource "aws_lb_listener" "http" {
+  count = length(var.public_subnet_cidr_blocks)
+  load_balancer_arn = aws_lb.load-balancer[count.index].arn
+  port = 80
+  protocol = "HTTP"
 
-  load_balancer_arn = "${aws_lb.aik_lb.arn}"
+  default_action {
+    type = "fixed-response"
 
-
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "404: page not found"
+      status_code = 404
+    }
+  }
 }
 
 resource "aws_lb_listener_rule" "asg" {
-  listener_arn = "${aws_lb_listener.http.arn}"
+  count = length(var.public_subnet_cidr_blocks)
+  listener_arn = aws_lb_listener.http[count.index].arn
   priority = 100
 
   condition {
@@ -339,12 +300,11 @@ resource "aws_lb_listener_rule" "asg" {
 
   action {
     type = "forward"
-    target_group_arn = "${aws_lb_target_group.lb-target-front.arn}"
+    target_group_arn = aws_lb_target_group.lb-target-front.arn
   }
 
 }
 
-*/
 
 resource "aws_instance" "aik-portal-back" {
   count = length(var.public_subnet_cidr_blocks)
@@ -360,7 +320,7 @@ resource "aws_instance" "aik-portal-back" {
 
 }
 
-resource "aws_instance" "aik-portal-front" {
+/*resource "aws_instance" "aik-portal-front" {
   count = length(var.public_subnet_cidr_blocks)
 
   ami                    = var.aik-ami-id
@@ -374,7 +334,7 @@ resource "aws_instance" "aik-portal-front" {
 
   user_data = file("./scripts/front.sh")
 
-}
+}*/
 
 resource "aws_db_subnet_group" "subnet-db-group" {
   count = length(var.public_subnet_cidr_blocks)
@@ -385,7 +345,7 @@ resource "aws_db_subnet_group" "subnet-db-group" {
 resource "aws_db_instance" "My-SQL-Database" {
   count = length(var.public_subnet_cidr_blocks)
 
-  identifier = "db-rds-AguirreCoralUrbano"
+  identifier = "db-rds-aguirre-coral-urbano"
   allocated_storage = 20
   storage_type = "gp2"
   engine = "mysql"

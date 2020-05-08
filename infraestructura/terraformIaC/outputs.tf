@@ -1,8 +1,8 @@
  
-output "IP-PORTAL" {
-  value = aws_instance.aik-portal-front[0].public_ip
-}
+/*output "IP-PORTAL" {
+  value = aws_launch_configuration.launch-front.associate_public_ip_address
+}*/
 
-output "DB" {
+/*output "DB" {
   value = aws_db_instance.My-SQL-Database[0].address
-}
+}*/

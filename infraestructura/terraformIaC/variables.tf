@@ -41,15 +41,19 @@ variable "aik-instance-back-name" {
 
 variable "alb_name" {
   type = string
-  default = "lb-automatizacion-AguirreCoralUrbano"
+  default = "lb-devops-AguirreCoralUrbano"
 }
 
 variable "alb_security_group_name" {
   type = string
-  default = "sg-alb-automatizacion-AguirreCoralUrbano"
+  default = "alb-automatizacion"
 }
 
 variable "public_subnet_cidr_blocks" {
   default     = ["10.0.0.0/16"]
   type        = list(string)
+}
+
+variable "server_port" {
+  default = "3030"
 }
