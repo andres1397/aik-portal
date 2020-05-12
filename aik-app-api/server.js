@@ -16,10 +16,41 @@ connection.connect(function(err) {
       return;
   }
   console.log('Conectado con el identificador ' + connection.threadId);
+  //Creacion de las tablas
+  connection.query('CREATE TABLE buycars ( title VARCHAR(50), modelo VARCHAR(50), score INT, price VARCHAR(50), description VARCHAR(50), PRIMARY KEY (title));');
+  connection.query('CREATE TABLE vehicles ( name VARCHAR(50), description VARCHAR(50), avatar VARCHAR(50), PRIMARY KEY (name));');
+  connection.query('CREATE TABLE support ( name VARCHAR(50), avatar VARCHAR(50), PRIMARY KEY (name));');
+
+  //Ingresar datos a tabla buycars
+  connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Xerato", "2020", 8, "80.000.000", "Modern Car 1.6CC");');
+  connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Pikanto", "2020", 6, "40.000.000", "Modern Car 1.0CC");');
+  connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Rio Zedan", "2016", 9, "30.000.000", "Modern Car 2.0CC");');
+  connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Zoluto", "2016", 9, "20.000.000", "Modern Car 3.0CC");');
+  connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Stringer", "2015", 7, "10.000.000", "Modern Car 3.0CC");');
+  connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Ant-Man", "2015", 8, "70.000.000", "Modern Car 1.0CC");');
+  connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Rio Jatchbash", "2014", 10, "50.000.000", "Modern Car 1.0CC");');
+
+  //Ingresar datos a tabla vehicles
+
+  connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Xerato", "Modern Car 1.6CC", "https://www.kia.com/content/dam/kwcms/co/es/images/shoppingtool/Cerato-Showroom.png")');
+  connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Pikanto", "Modern Car 1.0CC", "https://www.kia.com/content/dam/kwcms/co/es/images/showroom/PicantoNew/kia-co-picanto-ja.png")');
+  connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Rio Zedan", "Modern Car 2.0CC", "https://www.kia.com/content/dam/kwcms/gt/en/images/vehicles/gnb/kia_rio_sc_4dr_17my.png")');
+  connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Zoluto", "Modern Car 3.0CC", "https://www.kia.com/content/dam/kwcms/gt/en/images/vehicles/gnb/kia_ab_19my.png")');
+  connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Stringer", "Modern Car 3.0CC", "https://www.kia.com/content/dam/kwcms/co/es/images/showroom/stinger/kia-stinger.png")');
+  connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Ant-Man", "Modern Car 1.0CC", "https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/4/4b/Luis%27_Van_%28Quantum_Tunnel%29.png/revision/latest/scale-to-width-down/310?cb=20181002134025")');
+  connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Rio Jatchbash", "Modern Car 1.0CC", "https://www.kia.com/content/dam/kwcms/gt/en/images/vehicles/gnb/kia-rio-sc.png")');
+
+  //Ingresar datos a tabla support
+
+  connection.query('INSERT INTO support (name, avatar) VALUES ("Mechanics Appointments", "glyphicon-eye-open")');
+  connection.query('INSERT INTO support (name, avatar) VALUES ("Post-sale service", "glyphicon-fire")');
+  connection.query('INSERT INTO support (name, avatar) VALUES ("Guarantee", "glyphicon-time")');
+  connection.query('INSERT INTO support (name, avatar) VALUES ("Online manual", "glyphicon-record")');
+  connection.query('INSERT INTO support (name, avatar) VALUES ("New AIK", "glyphicon-heart-empty")');
+  connection.query('INSERT INTO support (name, avatar) VALUES ("safety campaigns", "glyphicon-globe")');
+
 });
 
-connection.query('CREATE TABLE buycars ( title varchar(50), release varchar(50), score int(11), price varchar(50), description varchar(50), PRIMARY KEY (title));');
-connection.query('INSERT INTO buycars (title, release, score, price, description) VALUES ("Xerato", "2020", 8, "80.000.000", "Modern Car 1.6CC");');
 
 
 //Testing endpoint
@@ -30,55 +61,29 @@ app.get('/', function(req, res){
 
 // Implement the movies API endpoint
 app.get('/buycars', function(req, res){
-  var vehicles = [
-    {title : 'Xerato', release: '2020', score: 8, price: '80.000.000', description : 'Modern Car 1.6CC'},    
-    {title : 'Pikanto', release : '2020', score: 6, price: '40.000.000', description : 'Modern Car 1.0CC'},
-    {title : 'Rio Zedan', release: '2016', score: 9, price: '30.000.000', description : 'Modern Car 2.0CC'},
-    {title : 'Zoluto', release: '2016', score: 9, price: '20.000.000', description : 'Modern Car 3.0CC'},
-    {title : 'Stringer', release : '2015', score: 7, price: '10.000.000', description: 'Modern Car 3.0CC'},
-    {title : 'Ant-Man', release: '2015', score: 8, price: '70.000.000', description : 'Modern Car 1.0CC'},
-    {title : 'Rio Jatchbash', release : '2014', score: 10, price: '50.000.000', description : 'Modern Car 1.0CC'},
-  ];
+  con.query('SELECT * FROM buycars', (err,vehicles) => {
+    if(err) throw err;
 
   res.json(vehicles);
 });
-
-//app.get('/', function(req, res, next) {   
-    //now you can call the get-driver, passing a callback function
-//    getMovies(function (err, moviesResult){ 
-       //you might want to do something is err is not null...      
-//       res.json(moviesResult);
-
-//    });
-//});
+});
 
 // Implement the reviewers API endpoint
 app.get('/vehicles', function(req, res){
-  var vehicles = [
-    {name : 'Xerato', description : 'Modern Car 1.6CC', avatar: 'https://www.kia.com/content/dam/kwcms/co/es/images/shoppingtool/Cerato-Showroom.png'},
-    {name: 'Pikanto', description : 'Modern Car 1.6CC', avatar: 'https://www.kia.com/content/dam/kwcms/co/es/images/showroom/PicantoNew/kia-co-picanto-ja.png'},
-    {name: 'Rio zedan', description : 'Modern Car 1.6CC', avatar: 'https://www.kia.com/content/dam/kwcms/gt/en/images/vehicles/gnb/kia_rio_sc_4dr_17my.png'},
-    {name: 'Zoluto', description : 'Modern Car 1.6CC', avatar: 'https://www.kia.com/content/dam/kwcms/gt/en/images/vehicles/gnb/kia_ab_19my.png'},
-    {name: 'Stringer', description: 'Modern Car 1.6CC', avatar: 'https://www.kia.com/content/dam/kwcms/co/es/images/showroom/stinger/kia-stinger.png'},
-    {name: 'Ant-man', description: 'Modern Car 1.6CC', avatar : 'https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/4/4b/Luis%27_Van_%28Quantum_Tunnel%29.png/revision/latest/scale-to-width-down/310?cb=20181002134025'},
-    {name: 'Rioc Jatchbash', description : 'Modern Car 1.6CC', avatar : 'https://www.kia.com/content/dam/kwcms/gt/en/images/vehicles/gnb/kia-rio-sc.png'}
-  ];
+  con.query('SELECT * FROM vehicles', (err,vehicles) => {
+    if(err) throw err;
 
   res.json(vehicles);
+});
 });
 
 // Implement the publications API endpoint
 app.get('/support', function(req, res){
-  var support = [
-    {name : 'Mechanics Appointments', avatar: 'glyphicon-eye-open'},
-    {name : 'Post-sale service', avatar: 'glyphicon-fire'},
-    {name : 'Guarantee', avatar: 'glyphicon-time'},
-    {name : 'Online manual', avatar: 'glyphicon-record'},
-    {name : 'New AIK', avatar: 'glyphicon-heart-empty'},
-    {name : 'safety campaigns', avatar : 'glyphicon-globe'}
-  ];
+  con.query('SELECT * FROM support', (err,vehicles) => {
+    if(err) throw err;
 
-  res.json(support);
+  res.json(vehicles);
+});
 });
 
 // Implement content
