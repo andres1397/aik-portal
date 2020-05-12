@@ -10,16 +10,16 @@ var connection = mysql.createConnection({
   port : process.env.PORT || '3306'
 });
 
-conection.connect(function(err) {
+connection.connect(function(err) {
   if (err) {
       console.error('Error de conexion: ' + err.stack);
       return;
   }
-  console.log('Conectado con el identificador ' + conexion.threadId);
+  console.log('Conectado con el identificador ' + connection.threadId);
 });
 
-conection.query('CREATE TABLE buycars ( title varchar(50), release varchar(50), score int(11), price varchar(50), description varchar(50), PRIMARY KEY (title));');
-conection.query('INSERT INTO buycars (title, release, score, price, description) VALUES ("Xerato", "2020", 8, "80.000.000", "Modern Car 1.6CC");');
+connection.query('CREATE TABLE buycars ( title varchar(50), release varchar(50), score int(11), price varchar(50), description varchar(50), PRIMARY KEY (title));');
+connection.query('INSERT INTO buycars (title, release, score, price, description) VALUES ("Xerato", "2020", 8, "80.000.000", "Modern Car 1.6CC");');
 
 
 //Testing endpoint
