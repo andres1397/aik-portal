@@ -10,17 +10,17 @@ var connection = mysql.createConnection({
   port : process.env.PORT || '3306'
 });
 
-connection.connect();
+conection.connect(function(err) {
+  if (err) {
+      console.error('Error de conexion: ' + err.stack);
+      return;
+  }
+  console.log('Conectado con el identificador ' + conexion.threadId);
+});
 
+conection.query('CREATE TABLE buycars ( title varchar(50), release varchar(50), score int(11), price varchar(50), description varchar(50), PRIMARY KEY (title));');
+conection.query('INSERT INTO buycars (title, release, score, price, description) VALUES ("Xerato", "2020", 8, "80.000.000", "Modern Car 1.6CC");');
 
-
-//function getMovies(callback) {    
-//        connection.query("SELECT * FROM movie_db.movies",
-//            function (err, rows) {
-//                callback(err, rows); 
-//            }
-//        );    
-//}
 
 //Testing endpoint
 app.get('/', function(req, res){
