@@ -17,9 +17,9 @@ connection.connect(function(err) {
   }
   console.log('Conectado con el identificador ' + connection.threadId);
   //Creacion de las tablas
-  connection.query('CREATE TABLE buycars ( title VARCHAR(50), modelo VARCHAR(50), score INT, price VARCHAR(50), description VARCHAR(50), PRIMARY KEY (title));');
-  connection.query('CREATE TABLE vehicles ( name VARCHAR(50), description VARCHAR(50), avatar VARCHAR(50), PRIMARY KEY (name));');
-  connection.query('CREATE TABLE support ( name VARCHAR(50), avatar VARCHAR(50), PRIMARY KEY (name));');
+  connection.query('CREATE TABLE buycars ( title VARCHAR(255), modelo VARCHAR(255), score INT, price VARCHAR(255), description VARCHAR(255), PRIMARY KEY (title));');
+  connection.query('CREATE TABLE vehicles ( name VARCHAR(255), description VARCHAR(255), avatar VARCHAR(1000), PRIMARY KEY (name));');
+  connection.query('CREATE TABLE support ( name VARCHAR(255), avatar VARCHAR(255), PRIMARY KEY (name));');
 
   //Ingresar datos a tabla buycars
   connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Xerato", "2020", 8, "80.000.000", "Modern Car 1.6CC");');
@@ -27,7 +27,7 @@ connection.connect(function(err) {
   connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Rio Zedan", "2016", 9, "30.000.000", "Modern Car 2.0CC");');
   connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Zoluto", "2016", 9, "20.000.000", "Modern Car 3.0CC");');
   connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Stringer", "2015", 7, "10.000.000", "Modern Car 3.0CC");');
-  connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Ant-Man", "2015", 8, "70.000.000", "Modern Car 1.0CC");');
+  connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Batimovil", "2015", 8, "70.000.000", "Modern Car 1.0CC");');
   connection.query('INSERT INTO buycars (title, modelo, score, price, description) VALUES ("Rio Jatchbash", "2014", 10, "50.000.000", "Modern Car 1.0CC");');
 
   //Ingresar datos a tabla vehicles
@@ -37,7 +37,7 @@ connection.connect(function(err) {
   connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Rio Zedan", "Modern Car 2.0CC", "https://www.kia.com/content/dam/kwcms/gt/en/images/vehicles/gnb/kia_rio_sc_4dr_17my.png")');
   connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Zoluto", "Modern Car 3.0CC", "https://www.kia.com/content/dam/kwcms/gt/en/images/vehicles/gnb/kia_ab_19my.png")');
   connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Stringer", "Modern Car 3.0CC", "https://www.kia.com/content/dam/kwcms/co/es/images/showroom/stinger/kia-stinger.png")');
-  connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Ant-Man", "Modern Car 1.0CC", "https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/4/4b/Luis%27_Van_%28Quantum_Tunnel%29.png/revision/latest/scale-to-width-down/310?cb=20181002134025")');
+  connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Batimovil", "Modern Car 1.0CC", "https://vignette.wikia.nocookie.net/marvelcinematicuniverse/images/4/4b/Luis%27_Van_%28Quantum_Tunnel%29.png/revision/latest/scale-to-width-down/310?cb=20181002134025")');
   connection.query('INSERT INTO vehicles (name, description, avatar) VALUES ("Rio Jatchbash", "Modern Car 1.0CC", "https://www.kia.com/content/dam/kwcms/gt/en/images/vehicles/gnb/kia-rio-sc.png")');
 
   //Ingresar datos a tabla support
