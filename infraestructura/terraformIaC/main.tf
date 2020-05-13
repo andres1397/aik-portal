@@ -46,12 +46,6 @@ resource "aws_subnet" "another-subnet-public" {
 
 # Creación y asociación de la subred publica con la tabla de ruteo
 resource "aws_subnet" "aik-subnet-public" {
-/*
-  vpc_id                  = aws_vpc.aik-vpc.id
-  cidr_block              = cidrsubnet(var.vpc-cidr, 8, 1)
-  availability_zone       = element(split(",", var.aws-availability-zones), count.index)
-  map_public_ip_on_launch = true
-  */
 
   count = length(var.public_subnet_cidr_blocks)
   vpc_id = aws_vpc.aik-vpc.id
@@ -146,6 +140,7 @@ resource "aws_security_group" "aik-sg-portal-back" {
   }
 }
 
+// Creacion del grupo de seguridad para la base de datos
 resource "aws_security_group" "db-sg" {
   name = "db-sg"
   vpc_id = aws_vpc.aik-vpc.id
@@ -198,17 +193,17 @@ resource "aws_launch_configuration" "launch-front" {
       sudo yum update -y
       sudo yum install -y git
       # Clonar nuestro repositorio
-      sudo git clone -b Feature-FrontBackInfra-ImplementacionDiseñoAWS https://github.com/andres1397/aik-portal /srv/aik-portal
+      sudo git clone https://github.com/andres1397/aik-portal /srv/aik-portal
 
       # Crear variable de entorno
 
       echo "BACKIP="${aws_instance.aik-portal-back[count.index].private_ip}"" >> /etc/environment
 
       # Instalar SaltStack
-      #sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
-      sudo curl -L https://bootstrap.saltstack.com -o bootstrap_salt.sh
-      sudo sh bootstrap_salt.sh
-      #sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
+      #sudo curl -L https://bootstrap.saltstack.com -o bootstrap_salt.sh
+      #sudo sh bootstrap_salt.sh
+      sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
+      sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
 
       #Put custom minion config in place (for enabling masterless mode)
       sudo cp -r /srv/aik-portal/Configuration_Managment/minion.d /etc/salt/
@@ -218,7 +213,6 @@ resource "aws_launch_configuration" "launch-front" {
       sudo salt-call state.apply
 
       EOF
-
   lifecycle {
       create_before_destroy = true
   }
@@ -305,7 +299,6 @@ resource "aws_lb_listener_rule" "asg" {
 
 }
 
-
 resource "aws_instance" "aik-portal-back" {
   count = length(var.public_subnet_cidr_blocks)
 
@@ -319,45 +312,34 @@ resource "aws_instance" "aik-portal-back" {
   depends_on = [aws_db_instance.My-SQL-Database]
 
   user_data = <<-EOF
-    #!/bin/bash
-    sudo yum update -y
-    sudo yum install -y git
-    # Clonar nuestro repositorio
-    sudo git clone -b Feature-FrontBackInfra-ImplementacionDiseñoAWS https://github.com/andres1397/aik-portal /srv/aik-portal
+      #!/bin/bash
+      sudo yum update -y
+      sudo yum install -y git
+      # Clonar nuestro repositorio
+      sudo git clone https://github.com/andres1397/aik-portal /srv/aik-portal
 
-    echo "DB_HOST="${aws_db_instance.My-SQL-Database[count.index].address}"" >> /etc/environment
+      # Instalar Mysql
+      #sudo yum install -y https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
+      #sudo yum install -y mysql-community-client
 
-    # Instalar SaltStack
-    sudo curl -L https://bootstrap.saltstack.com -o bootstrap_salt.sh
-    sudo sh bootstrap_salt.sh
-    #sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
-    #sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
+      echo "DB_HOST="${aws_db_instance.My-SQL-Database[count.index].address}"" >> /etc/environment
 
-    #Put custom minion config in place (for enabling masterless mode)
-    sudo cp -r /srv/aik-portal/Configuration_Managment/minion.d /etc/salt/
-    echo -e 'grains:\n roles:\n  - backend' | sudo tee /etc/salt/minion.d/grains.conf
+      # Instalar SaltStack
+      #sudo curl -L https://bootstrap.saltstack.com -o bootstrap_salt.sh
+      #sudo sh /bootstrap_salt.sh
+      sudo yum install -y https://repo.saltstack.com/yum/redhat/salt-repo-latest.el7.noarch.rpm
+      sudo yum clean expire-cache;sudo yum -y install salt-minion; chkconfig salt-minion off
 
-    # Realizar un saltstack completo
-    sudo salt-call state.apply
-  EOF
+      #Put custom minion config in place (for enabling masterless mode)
+      sudo cp -r /srv/aik-portal/Configuration_Managment/minion.d /etc/salt/
+      echo -e 'grains:\n roles:\n  - backend' | sudo tee /etc/salt/minion.d/grains.conf
+
+      # Realizar un saltstack completo
+      sudo salt-call state.apply
+
+    EOF
 
 }
-
-/*resource "aws_instance" "aik-portal-front" {
-  count = length(var.public_subnet_cidr_blocks)
-
-  ami                    = var.aik-ami-id
-  instance_type          = var.aik-instance-type
-  key_name               = var.aik-key-name
-  vpc_security_group_ids = [aws_security_group.aik-sg-portal-front.id]
-  subnet_id              = aws_subnet.aik-subnet-public[count.index].id
-  tags = { Name = var.aik-instance-front-name }
-
-  depends_on = [aws_instance.aik-portal-back]
-
-  user_data = file("./scripts/front.sh")
-
-}*/
 
 resource "aws_db_subnet_group" "subnet-db-group" {
   count = length(var.public_subnet_cidr_blocks)
