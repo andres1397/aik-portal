@@ -61,7 +61,7 @@ app.get('/', function(req, res){
 
 // Implement the movies API endpoint
 app.get('/buycars', function(req, res){
-  con.query('SELECT * FROM buycars', (err,vehicles) => {
+  connection.query('SELECT * FROM buycars', (err,vehicles) => {
     if(err) throw err;
 
   res.json(vehicles);
@@ -70,7 +70,7 @@ app.get('/buycars', function(req, res){
 
 // Implement the reviewers API endpoint
 app.get('/vehicles', function(req, res){
-  con.query('SELECT * FROM vehicles', (err,vehicles) => {
+  connection.query('SELECT * FROM vehicles', (err,vehicles) => {
     if(err) throw err;
 
   res.json(vehicles);
@@ -79,7 +79,7 @@ app.get('/vehicles', function(req, res){
 
 // Implement the publications API endpoint
 app.get('/support', function(req, res){
-  con.query('SELECT * FROM support', (err,vehicles) => {
+  connection.query('SELECT * FROM support', (err,vehicles) => {
     if(err) throw err;
 
   res.json(vehicles);
