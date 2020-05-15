@@ -30,7 +30,7 @@ node {
 
   stage "Deploy AMI"
 
-    string amiIdUnFormat = sh returnStdout: true, script:"tail -n1 CDeliverypacker/packer.log | awk '{printf \$NF}' "
+    string amiIdUnFormat = sh returnStdout: true, script:"tail -n1 CDelivery/packer/packer.log | awk '{printf \$NF}' "
     def amiId = amiIdUnFormat.replace("\\n","")
     def ec2Keypair = "devops-automatizacion-AguirreCoralUrbano"
     def secGroup = "sg-0846f3e2fde417c71"
