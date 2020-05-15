@@ -1,8 +1,8 @@
 {
-    "srcAmiId": "ami-0fc61db8544a617ed",
+    "srcAmiId": "ami-0d6621c01e8c2de2c",
     "amiName": "aik-app",
     "sshUser": "ec2-user",
-    "subnetId": "subnet-0886c90314d0a1c3e",
-    "vpcId": "vpc-0e502a92f37c65218",
+    "subnetId": "subnet-0bd25c232cc43ff62",
+    "vpcId": "vpc-038a3b1c439f6401b",
     "userDataFile": "CDelivery/packer/aik-app_userdata.sh"
   }
