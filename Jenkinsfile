@@ -17,7 +17,7 @@ node {
         sh "[ -d ~/repo/rpm/aik-app] || mkdir -p ~/repo/rpm/aik-app/"
         sh "sudo mv ./aik-app-ui/rpm/*.rpm ~/repo/rpm/aik-app/"
         sh "createrepo ~/repo/"
-        sh "aws s3 sync ~/repo s3://artifacts-automatizacion-grupo2/ --region us-west-2 --delete"
+        sh "aws s3 sync ~/repo s3://bucketacu/ --region us-west-2 --delete"
     stage "Check YUM repo"
         sh "sudo yum clean all"
         sh "sudo yum update -y"
