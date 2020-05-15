@@ -13,7 +13,7 @@
 
 
         #Put custom minion config in place (for enabling masterless mode)
-        sudo cp -r /srv/aik-portal/Configuration_Managment/minion.d /etc/salt/
+        #sudo cp -r /srv/aik-portal/Configuration_Managment/minion.d /etc/salt/
         #sudo cp -r /srv/Configuration_management/SaltStack/minion.d /etc/salt/
         echo -e 'grains:\n roles:\n  - frontend' > /etc/salt/minion.d/grains.conf
 
