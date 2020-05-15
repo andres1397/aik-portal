@@ -1,5 +1,5 @@
 --- 
-include: 
+include:
   - nodejs
   - git
 
@@ -17,5 +17,5 @@ install_npm_dependencies:
 
 run_aik_portal:
   cmd.run:
-    - name: "node /srv/aik-portal/aik-app-ui/server.js"
+    - name: "nohup node /srv/aik-portal/aik-app-ui/server.js > /dev/null 2>&1 &"
 
