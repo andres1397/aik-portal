@@ -1,6 +1,7 @@
 #!/bin/bash
-        #sudo yum update -y
-        #sudo yum install -y git 
+        sudo yum update -y
+        sudo yum install -y git
+        sudo git clone https://github.com/andres1397/aik-portal /srv/aik-portal
         #Clone salt repo
         #git clone https://github.com/icesi-ops/training_IaC /srv/Configuration_management
 
@@ -12,6 +13,7 @@
 
 
         #Put custom minion config in place (for enabling masterless mode)
+        sudo cp -r /srv/aik-portal/Configuration_Managment/minion.d /etc/salt/
         #sudo cp -r /srv/Configuration_management/SaltStack/minion.d /etc/salt/
         echo -e 'grains:\n roles:\n  - frontend' > /etc/salt/minion.d/grains.conf
 
