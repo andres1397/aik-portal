@@ -6,7 +6,7 @@ include:
 aik-ui: 
   git.latest: 
     - 
-      name: -b PruebaCliente "https://github.com/andres1397/aik-portal"
+      name: "https://github.com/andres1397/aik-portal"
     - 
       target: /srv/aik-portal
 
