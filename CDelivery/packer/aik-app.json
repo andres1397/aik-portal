@@ -41,8 +41,7 @@
       {
         "type": "salt-masterless",
         "skip_bootstrap": true,
-        "local_state_tree": "Configuration_management/Configuration_Managment/states",
-        "local_pillar_roots": "Configuration_management/Configuration_Managment/pillars"
+        "local_state_tree": "Configuration_management/Configuration_Managment/states"
       },
       {
         "type": "file",
