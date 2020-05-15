@@ -9,28 +9,40 @@ node {
 
   stage "Checkout additional repos"
     dir("Configuration_management") {
-      git "https://github.com/icesi-ops/aik-portal"
+      git "https://github.com/andres1397/aik-portal"
+    }
+    dir("aik-app-api") {
+      git "https://github.com/andres1397/aik-portal"
     }
 
+    dir("aik-app-ui") {
+      git "https://github.com/andres1397/aik-portal"
+    }
+
+    dir("infraestructura") {
+      git "https://github.com/andres1397/aik-portal"
+    }
+
+
   stage "Run Packer"
-    sh "/opt/packer validate -var=\"appVersion=$APP_VERSION\" -var-file=CDelivery/packer/aik-app_vars.json CDelivery/packer/aik-app.json"
-    sh "/opt/packer build -machine-readable -var=\"appVersion=$APP_VERSION\" -var-file=CDelivery/packer/aik-app_vars.json CDelivery/packer/aik-app.json | tee CDelivery/packer/packer.log"
+    sh "/usr/local/bin/packer validate -var=\"appVersion=$APP_VERSION\" -var-file=CDelivery/packer/aik-app_vars.json CDelivery/packer/aik-app.json"
+    sh "/usr/local/bin/packer build -machine-readable -var=\"appVersion=$APP_VERSION\" -var-file=CDelivery/packer/aik-app_vars.json CDelivery/packer/aik-app.json | tee CDelivery/packer/packer.log"
 
   stage "Deploy AMI"
 
-    string amiIdUnFormat = sh returnStdout: true, script:"tail -n1 CDelivery/packer/packer.log | awk '{printf \$NF}' "
+    string amiIdUnFormat = sh returnStdout: true, script:"tail -n1 CDeliverypacker/packer.log | awk '{printf \$NF}' "
     def amiId = amiIdUnFormat.replace("\\n","")
-    def ec2Keypair = "devops"
-    def secGroup = "sg-08599e13de23cc44c"
+    def ec2Keypair = "devops-automatizacion-AguirreCoralUrbano"
+    def secGroup = " sg-07f3a0143b8196d55"
     def instanceType = "t2.micro"
-    def subnetId = "subnet-0886c90314d0a1c3e"
+    def subnetId = "subnet-01fa07c75b64aab76"
 
     sh "tail -n1 CDelivery/packer/packer.log"
     sh "cat CDelivery/packer/packer.log"
     echo "Esto tiene packer.log \$(cat CDelivery/packer/packer.log)"
     echo "Launching an instance from ${amiId}"
     sh "aws ec2 run-instances \
-        --region us-east-1 \
+        --region us-west-2 \
         --image-id ${amiId} \
         --key-name ${ec2Keypair} \
         --security-group-ids ${secGroup} \
@@ -43,21 +55,18 @@ node {
     def instanceId = sh returnStdout: true, script: "printf \$(jq .Instances[0].InstanceId < .ec2_run-instances.log)"
 
     sh "aws ec2 create-tags --resources ${instanceId} \
-        --region us-east-1 \
-        --tags Key=Name,Value=\"Jenkins (aik-app-$APP_VERSION)\" Key=CreatedBy,Value=Jenkins "
+        --region us-west-2 \
+        --tags Key=Name,Value=\"Jenkins (aik-app-$APP_VERSION)\" Key=CreatedBy,Value=Jenkins"
     
     echo "Waiting for the instance to come into service"
     sh "aws ec2 wait instance-running --instance-ids ${instanceId}"
     sleep 60
-
     echo "Registering with ELB"
     def elbId = "alb-aik"
     sh "aws elbv2 register-targets \
-    --region us-east-1 \
+    --region us-west-2 \
     --target-group-arn arn:aws:elasticloadbalancing:us-east-1:382356559478:targetgroup/alb-aik/8330c53354f19757 \
     --targets Id=${instanceId}"
-
-
   stage "Run AB test"
     def elbUri = "alb-aik-1227794311.us-east-1.elb.amazonaws.com"  
     sh "ab -c5 -n1000 -d -S ${elbUri} | tee .ab.log"
@@ -66,7 +75,6 @@ node {
     def failedReqs = sh returnStdout: true, script:"grep 'Failed requests' .ab.log | awk '{printf \$NF}'"
     def rps = sh returnStdout: true, script:"grep 'Requests per second' .ab.log | awk '{printf \$4}' | awk -F. '{printf \$1}'"
     def docLen = sh returnStdout: true, script:"grep 'Document Length' .ab.log | awk '{printf \$3}'"
-
     echo "Non2xx=${non2xx}, FailedReqs=${failedReqs}, ReqsPerSec=${rps}"
     sh "if [ ${non2xx} -gt 10 ] || [ ${failedReqs} -gt 10 ] || [ ${rps} -lt 1000 ]; then \
           echo \"ERR: AB test failed\" | tee -a .error.log; \
@@ -74,7 +82,7 @@ node {
        "
 
   stage "Terminate test instance"
-    sh "aws ec2 terminate-instances --region us-east-1 --instance-ids ${instanceId}"
+    sh "aws ec2 terminate-instances --region us-west-2 --instance-ids ${instanceId}"
 
   stage "Verify test results"
     sh "if [ -s '.error.log' ]; then \
