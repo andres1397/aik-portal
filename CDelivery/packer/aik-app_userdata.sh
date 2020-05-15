@@ -1,7 +1,7 @@
 #!/bin/bash
-        sudo yum update -y
-        sudo yum install -y git
-        sudo git clone https://github.com/andres1397/aik-portal /srv/aik-portal
+        #sudo yum update -y
+        #sudo yum install -y git
+        #sudo git clone https://github.com/andres1397/aik-portal /srv/aik-portal
         #Clone salt repo
         #git clone https://github.com/icesi-ops/training_IaC /srv/Configuration_management
 
