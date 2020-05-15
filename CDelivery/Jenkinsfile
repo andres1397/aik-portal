@@ -44,10 +44,10 @@ node {
 
     sh "aws ec2 create-tags --resources ${instanceId} \
         --region us-east-1 \
-        --tags Key=Name,Value=\"Jenkins (aik-app-$APP_VERSION)\" Key=CreatedBy,Value=Jenkins \"
+        --tags Key=Name,Value=\"Jenkins (aik-app-$APP_VERSION)\" Key=CreatedBy,Value=Jenkins "
     
     echo "Waiting for the instance to come into service"
-    aws ec2 wait instance-running --instance-ids ${instanceId}
+    sh "aws ec2 wait instance-running --instance-ids ${instanceId}"
     sleep 60
 
     echo "Registering with ELB"
