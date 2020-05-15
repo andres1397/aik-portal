@@ -19,7 +19,7 @@ node {
       git "https://github.com/andres1397/aik-portal"
     }
 
-    dir("infraestructura") {
+    dir("/srv") {
       git "https://github.com/andres1397/aik-portal"
     }
 
