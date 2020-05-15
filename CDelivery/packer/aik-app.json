@@ -10,7 +10,7 @@
     },
     "builders": [{
       "type": "amazon-ebs",
-      "region": "us-east-1",
+      "region": "us-west-2",
       "source_ami": "{{user `srcAmiId`}}",
       "instance_type": "t2.micro",
       "ssh_username": "{{user `sshUser`}}",
@@ -42,19 +42,6 @@
         "type": "salt-masterless",
         "skip_bootstrap": true,
         "local_state_tree": "Configuration_management/Configuration_Managment/states"
-      },
-      {
-        "type": "file",
-        "source": "CDelivery/serverspec",
-        "destination": "/tmp/"
-      },
-      
-      {
-        "type": "shell",
-        "execute_command": "sudo -S bash '{{.Path}}'",
-        "script": "CDelivery/packer/installRuby.sh",
-        "skip_clean": "true"
-        
       }
       
     ]
