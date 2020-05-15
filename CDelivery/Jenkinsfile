@@ -33,9 +33,9 @@ node {
     string amiIdUnFormat = sh returnStdout: true, script:"tail -n1 CDeliverypacker/packer.log | awk '{printf \$NF}' "
     def amiId = amiIdUnFormat.replace("\\n","")
     def ec2Keypair = "devops-automatizacion-AguirreCoralUrbano"
-    def secGroup = " sg-07f3a0143b8196d55"
+    def secGroup = "sg-0846f3e2fde417c71"
     def instanceType = "t2.micro"
-    def subnetId = "subnet-01fa07c75b64aab76"
+    def subnetId = "subnet-0bd25c232cc43ff62"
 
     sh "tail -n1 CDelivery/packer/packer.log"
     sh "cat CDelivery/packer/packer.log"
@@ -65,35 +65,7 @@ node {
     def elbId = "alb-aik"
     sh "aws elbv2 register-targets \
     --region us-west-2 \
-    --target-group-arn arn:aws:elasticloadbalancing:us-east-1:382356559478:targetgroup/alb-aik/8330c53354f19757 \
+    --target-group-arn arn:aws:elasticloadbalancing:us-west-2:682086073548:targetgroup/lb-devops-AguirreCoralUrbano/0619d7230f0fb844 \
     --targets Id=${instanceId}"
-  stage "Run AB test"
-    def elbUri = "alb-aik-1227794311.us-east-1.elb.amazonaws.com"  
-    sh "ab -c5 -n1000 -d -S ${elbUri} | tee .ab.log"
-    def non2xx = sh returnStdout: true, script:"set -o pipefail;(grep 'Non-2xx' .ab.log | awk '{printf \$NF}') || (printf 0)"
-    //def writeErr = sh returnStdout: true, script:"grep 'Write errors' .ab.log | awk '{printf \$NF}'"
-    def failedReqs = sh returnStdout: true, script:"grep 'Failed requests' .ab.log | awk '{printf \$NF}'"
-    def rps = sh returnStdout: true, script:"grep 'Requests per second' .ab.log | awk '{printf \$4}' | awk -F. '{printf \$1}'"
-    def docLen = sh returnStdout: true, script:"grep 'Document Length' .ab.log | awk '{printf \$3}'"
-    echo "Non2xx=${non2xx}, FailedReqs=${failedReqs}, ReqsPerSec=${rps}"
-    sh "if [ ${non2xx} -gt 10 ] || [ ${failedReqs} -gt 10 ] || [ ${rps} -lt 1000 ]; then \
-          echo \"ERR: AB test failed\" | tee -a .error.log; \
-        fi \
-       "
-
-  stage "Terminate test instance"
-    sh "aws ec2 terminate-instances --region us-west-2 --instance-ids ${instanceId}"
-
-  stage "Verify test results"
-    sh "if [ -s '.error.log' ]; then \
-          cat '.error.log'; \
-          :> '.error.log'; \
-          exit 100; \
-        else \
-          echo 'Tests OK'; \
-        fi \
-       "
-
-    stage "Trigger downstream"
-    build job: "aik-cdeployment", parameters: [[$class: "StringParameterValue", name: "AMI_ID", value: "${amiId}"]], wait: false
+  
 }
