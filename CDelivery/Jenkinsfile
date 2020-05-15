@@ -25,8 +25,8 @@ node {
 
 
   stage "Run Packer"
-    sh "/usr/local/bin/packer validate -var=\"appVersion=$APP_VERSION\" -var-file=CDelivery/packer/aik-app_vars.json CDelivery/packer/aik-app.json"
-    sh "/usr/local/bin/packer build -machine-readable -var=\"appVersion=$APP_VERSION\" -var-file=CDelivery/packer/aik-app_vars.json CDelivery/packer/aik-app.json | tee CDelivery/packer/packer.log"
+    sh "/usr/local/bin/packer validate -var=\"appVersion=${params.APP_VERSION}\" -var-file=CDelivery/packer/aik-app_vars.json CDelivery/packer/aik-app.json"
+    sh "/usr/local/bin/packer build -machine-readable -var=\"appVersion=${params.APP_VERSION}\" -var-file=CDelivery/packer/aik-app_vars.json CDelivery/packer/aik-app.json | tee CDelivery/packer/packer.log"
 
   stage "Deploy AMI"
 
@@ -56,7 +56,7 @@ node {
 
     sh "aws ec2 create-tags --resources ${instanceId} \
         --region us-west-2 \
-        --tags Key=Name,Value=\"Jenkins (aik-app-$APP_VERSION)\" Key=CreatedBy,Value=Jenkins"
+        --tags Key=Name,Value=\"Jenkins (aik-app-${params.APP_VERSION})\" Key=CreatedBy,Value=Jenkins"
     
     echo "Waiting for the instance to come into service"
     sh "aws ec2 wait instance-running --instance-ids ${instanceId}"
