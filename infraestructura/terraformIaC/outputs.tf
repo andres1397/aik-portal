@@ -1,8 +1,7 @@
  
-/*output "IP-PORTAL" {
-  value = aws_launch_configuration.launch-front.associate_public_ip_address
-}*/
-
-/*output "DB" {
-  value = aws_db_instance.My-SQL-Database[0].address
-}*/
+output "URL" {
+  value = aws_lb.load-balancer[0].dns_name
+}
+output "DBname" {
+  value = aws_db_instance.My-SQL-Database[0].name
+}
